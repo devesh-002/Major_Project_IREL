@@ -1,90 +1,72 @@
-import gc
-import glob
-import hashlib
-import itertools
-import json
-import os
-import random
-import re
-import subprocess
-from collections import Counter
-from os.path import join as pjoin
-import pandas as pd
-from sklearn import preprocessing
-import torch
-# 用fairseq的时候就用multiprocessing
-from multiprocessing import Pool
-from Stemmer import Stemmer
+#encoding=utf-8
 
-from others.logging import logger
-# from others.tokenization import BertTokenizer
-# fairseq环境去掉这句话。
-from transformers import BertTokenizer, BasicTokenizer, AutoTokenizer
 
-# from pytorch_transformers import BertTokenizer
+import argparse
+import time
 
-from others.utils import clean
-from others.rouge_not_a_wrapper import avg_rouge
-# from utils import _get_word_ngrams
-from indicnlp.tokenize import indic_tokenize
-import xml.etree.ElementTree as ET
-from nltk.corpus import stopwords
-stopwords_english=set(stopwords)
-stemmer = Stemmer('porter')
+# from others.logging import init_logger
+from preprocessing_util import read_file
 
-df = pd.read_csv(r"data/hin_train.csv", encoding='utf-8')
-stem_words = set()
-with open('../hindi_stemwords.txt', 'r') as f:
-    stem_words = {word.strip() for word in f}
-stopword = open('../hindi_stopwords.txt', 'r')
-stopword=set(stopword)
-suffixes_gujarati = ['નાં','ના','ની','નો','નું','ને','થી','માં','એ','ઓ','ે','તા','તી','વા','મા','વું','વુ','ો','માંથી','શો','ીશ','ીશું','શે',
-			'તો','તું','તાં','્યો','યો','યાં','્યું','યું','્યા','યા','્યાં','સ્વી','રે','ં','મ્','મ્','ી','કો']
-prefixes = ['અ']
+# def do_format_to_lines(args):
+#     print(time.clock())
+#     data_builder.format_to_lines(args)
+#     print(time.clock())
 
-def tokenise_english(data):  # working
-        data=processText(data)
-        toks = re.split(r"[^A-Za-z0-9]+", data)
-        finaal = list()
-        for i in toks:
-            word = stemmer.stemWord(i)
-            if (
-                len(word) <= 1 or len(word) > 45 or word in stopwords_english
-            ):  # check for word length
-                continue
-            finaal.append(word)
+# def do_format_to_bert(args):
+#     print(time.clock())
+#     data_builder.format_to_bert(args)
+#     print(time.clock())
 
-        return finaal
 
-def processText(text):
-    text = text.lower()
-    text = re.sub('((www.[^s]+)|(https?://[^s]+))', '', text)
-    text = re.sub('@[^s]+', '', text)
-    text = re.sub('[s]+', ' ', text)
-    text = re.sub(r'#([^s]+)', r'1', text)
-    text = text.strip('""')
-    return text
 
-def tokenizer_hindi( data):
-        data=processText(data)
-        data = re.sub(r'http[s]?\S*[\s | \n]', r' ', data)  # removing urls
-        data = re.sub(r'\{.?\}|\[.?\]|\=\=.*?\=\=', ' ', data)
-        clean = ''.join(ch if ch.isalnum() else ' ' for ch in data)
-        clean = clean.split()
+# def do_format_xsum_to_lines(args):
+#     print(time.clock())
+#     data_builder.format_xsum_to_lines(args)
+#     print(time.clock())
 
-        final = []
+# def do_tokenize(args):
+#     print(time.clock())
+#     data_builder.tokenize(args)
+#     print(time.clock())
 
-        for w in clean:
-            if w in stopword or w in stopwords_english or len(w) > 45 or len(w) <= 1:
-                continue
-            else:
-                for stm in stem_words:
-                    if(w.endswith(stm)):
-                        w = w[:-len(stm)]
-                final.append(w)
-        return final
-def tokenizer_gujarati(data):
-    data=data.lower()
-    data=processText(data)
-    
-    
+
+# def str2bool(v):
+#     if v.lower() in ('yes', 'true', 't', 'y', '1'):
+#         return True
+#     elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+#         return False
+#     else:
+#         raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--language", default='english', type=str)
+
+    # parser.add_argument("-mode", default='', type=str)
+    # parser.add_argument("-select_mode", default='greedy', type=str)
+    # parser.add_argument("-map_path", default='../../data/')
+    # parser.add_argument("-raw_path", default='../../line_data')
+    # parser.add_argument("-save_path", default='../../data/')
+
+    # parser.add_argument("-shard_size", default=2000, type=int)
+    # parser.add_argument('-min_src_nsents', default=3, type=int)
+    # parser.add_argument('-max_src_nsents', default=100, type=int)
+    # parser.add_argument('-min_src_ntokens_per_sent', default=5, type=int)
+    # parser.add_argument('-max_src_ntokens_per_sent', default=200, type=int)
+    # parser.add_argument('-min_tgt_ntokens', default=5, type=int)
+    # parser.add_argument('-max_tgt_ntokens', default=500, type=int)
+
+    # parser.add_argument("-lower", type=str2bool, nargs='?',const=True,default=True)
+    # parser.add_argument("-use_bert_basic_tokenizer", type=str2bool, nargs='?',const=True,default=False)
+
+    # parser.add_argument('-log_file', default='../../logs/cnndm.log')
+
+    # parser.add_argument('-dataset', default='')
+
+    # parser.add_argument('-n_cpus', default=2, type=int)
+
+
+    args = parser.parse_args()
+    # print(args.language)
+    read_file(None,args.language)
