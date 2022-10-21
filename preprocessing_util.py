@@ -208,10 +208,10 @@ def finalRead(save_path,raw_path):
 
             if lan_sp == 'eng':
                 data=read_file(None,"english")
-            else:
-                print("Preparing to tokenize chinese %s to %s..." % (stories_dir, tokenized_stories_dir))
-                command = ['java', 'edu.stanford.nlp.pipeline.StanfordCoreNLP', '-annotators', 'tokenize,ssplit',
-                           '-ssplit.newlineIsSentenceBreak', 'always', '-filelist', 'mapping_for_corenlp.txt',
-                           '-outputFormat',
-                           'json', '-outputDirectory', tokenized_stories_dir, '-props',
-                           'StanfordCoreNLP-chinese.properties', '-cp', '\"*\"', '-Xmx2g']
+                command=['java', 'edu.stanford.nlp.pipeline.StanfordCoreNLP', '-annotators', 'ssplit',
+                           '-ssplit.newlineIsSentenceBreak', 'always', '-filelist', 'mapping_for_corenlp.txt', '-outputFormat',
+                           'json', '-outputDirectory', data]
+            subprocess.call(command)
+            os.remove("mapping_for_corenlp.txt")
+
+           
