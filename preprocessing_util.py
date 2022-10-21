@@ -11,7 +11,6 @@ import subprocess
 from collections import Counter
 from os.path import join as pjoin
 import pandas as pd
-from sklearn import preprocessing
 import torch
 # 用fairseq的时候就用multiprocessing
 # from multiprocessing import Pool
@@ -20,14 +19,14 @@ from Stemmer import Stemmer
 from others.logging import logger
 # from others.tokenization import BertTokenizer
 # fairseq环境去掉这句话。
-from transformers import BertTokenizer, BasicTokenizer, AutoTokenizer
+# from transformers import BertTokenizer, BasicTokenizer, AutoTokenizer
 
 # from pytorch_transformers import BertTokenizer
 
 # from others.utils import clean
 # from others.rouge_not_a_wrapper import avg_rouge
 # from utils import _get_word_ngrams
-from indicnlp.tokenize import indic_tokenize
+# from indicnlp.tokenize import indic_tokenize
 import xml.etree.ElementTree as ET
 from nltk.corpus import stopwords
 stopwords_english = set(stopwords.words('english'))
@@ -49,7 +48,7 @@ def tokenise_english(data):  # working
     data = processText(data)
     punctuations = ('.', ',', '!', '?', '"', "'", '%', '#', '@', '&', '…')
 
-    toks = re.split(r"[^A-Za-z0-9]+", data)
+    toks = re.split(r" ", data)
     finaal = list()
     for i in toks:
         w = i
@@ -61,11 +60,13 @@ def tokenise_english(data):  # working
             len(word) <= 1 or len(word) > 45 or word in stopwords_english
         ):  # check for word length
             continue
+        check=False
         if w.endswith(punctuations):
             word += str(w[-1])
-
+            check=True
         finaal.append(word)
-
+        if check==True:
+            finaal.append("\n");
     return finaal
 
 
@@ -81,7 +82,7 @@ def processText(text):
 
 def tokenizer_hindi(data):
     data = processText(data)
-    data = re.sub(r'http[s]?\S*[\s | \n]', r' ', data)  # removing urls
+    data = re.sub(r'http[s]?\S*[\s ]', r' ', data)  # removing urls
     data = re.sub(r'\{.?\}|\[.?\]|\=\=.*?\=\=', ' ', data)
     clean = ''.join(ch if ch.isalnum() else ' ' for ch in data)
     clean = clean.split()
@@ -101,8 +102,13 @@ def tokenizer_hindi(data):
                 if(w.endswith(stm)):
                     w = w[:-len(stm)]
             final.append(w)
+        check=False
         if word.endswith(punctuations):
             w += str(word[-1])
+            check=True
+        final.append(w)
+        if check==True:
+            final.append("\n")
     return final
 
 
@@ -131,9 +137,13 @@ def tokenizer_gujarati(data):
             if w.startswith(prefix):
                 w = w.lstrip(prefix)
                 break
+        check=False
         if word.endswith(punctuations):
             w += str(word[-1])
+            check=True
         final.append(w)
+        if(check==True):
+            final.append("\n")
     final = " ".join(final)
 
     return final
@@ -150,12 +160,14 @@ def read_file(file_path, language, train=False):
             tokens = val.split()
             for i in range(len(tokens)):
                 tokens[i] = tokens[i].lower()
+            tokens.append("\n");
         df = pd.read_csv(r"data/eng_val.csv", encoding='utf-8')
         for val in df["Summary"]:
             val = str(val)
             tokens = val.split()
             for i in range(len(tokens)):
                 tokens[i] = tokens[i].lower()
+            tokens.append("\n");
 
             comment_words += " ".join(tokens)+" "
         data = tokenise_english(comment_words)
@@ -168,12 +180,15 @@ def read_file(file_path, language, train=False):
             tokens = val.split()
             for i in range(len(tokens)):
                 tokens[i] = tokens[i].lower()
+            tokens.append("\n");
+
         df = pd.read_csv(r"data/hin_val.csv", encoding='utf-8')
         for val in df["Summary"]:
             val = str(val)
             tokens = val.split()
             for i in range(len(tokens)):
                 tokens[i] = tokens[i].lower()
+            tokens.append("\n");
 
             comment_words += " ".join(tokens)+" "
         data = tokenizer_hindi(comment_words)
@@ -187,49 +202,56 @@ def read_file(file_path, language, train=False):
             for i in range(len(tokens)):
                 tokens[i] = tokens[i].lower()
             comment_words += " ".join(tokens)+" "
+            tokens.append("\n");
+
         df = pd.read_csv(r"data/guj_val.csv", encoding='utf-8')
         for val in df["Summary"]:
             val = str(val)
             tokens = val.split()
             for i in range(len(tokens)):
                 tokens[i] = tokens[i].lower()
+            tokens.append("\n");
 
         data = tokenizer_gujarati(comment_words)
     return data
 # def convertToJson()
 
+def finalRead(save_path,raw_path):
 
-def finalRead(save_path, raw_path):
-
-    dir_save = os.path.abspath(save_path)
-    og_dir = os.path.abspath(raw_path)
+    dir_save=os.path.abspath(save_path)
+    og_dir=os.path.abspath(raw_path)
     if not dir_save:
         os.mkdir(dir_save)
+    
+    languages=["eng","hin","guj"]
+    dataset_spl=["test","train","valid"]
 
-    languages = ["eng", "hin", "guj"]
-    dataset_spl = ["test", "train", "valid"]
+    # for data_dp in dataset_spl:
+    #     for lang in languages:
+    #         #  os.path.isdir(os.path.join(og_dir,data_dp,lang))
+    for data_sp in dataset_spl:
+         for lan_sp in languages:
+            # stories_dir = os.path.join(og_dir, data_sp, lan_sp)
+            # tokenized_stories_dir = os.path.join(dir_save, data_sp, lan_sp)
+            # stories = os.listdir(stories_dir)
 
-    for data_dp in dataset_spl:
-        for lang in languages:
-            assert os.path.isdir(os.path.join(og_dir, data_dp, lang))
-        for data_sp in dataset_spl:
-            for lan_sp in languages:
-                stories_dir = os.path.join(og_dir, data_sp, lan_sp)
-                tokenized_stories_dir = os.path.join(dir_save, data_sp, lan_sp)
-                stories = os.listdir(stories_dir)
+            # make IO list file
+            # print("Making list of files to tokenize...")
+            # with open("mapping_for_corenlp.txt", "w") as f:
+            #     for s in stories:
+            #         if (not s.endswith('story') and not s.endswith('chnref')):
+            #             continue
+            #         f.write("%s\n" % (os.path.join(stories_dir, s)))
 
-                # make IO list file
-                print("Making list of files to tokenize...")
-                with open("mapping_for_corenlp.txt", "w") as f:
-                    for s in stories:
-                        if (not s.endswith('story') and not s.endswith('chnref')):
-                            continue
-                        f.write("%s\n" % (os.path.join(stories_dir, s)))
+            if lan_sp == 'eng':
+                data=read_file(None,"english")
+                with open("mapping_for_corenlp.txt","w") as f:
+                    for word in data :
+                        f.write(word+" ")
+                command=['java', 'edu.stanford.nlp.pipeline.StanfordCoreNLP', '-annotators', 'tokenize,ssplit',
+                           '-ssplit.newlineIsSentenceBreak', 'always', '-filelist', 'mapping_for_corenlp.txt', '-outputFormat',
+                           'json', '-outputDirectory', dir_save]
+                # subprocess.call(command)
+                # os.remove("mapping_for_corenlp.txt")
 
-                if lan_sp == 'eng':
-                    data = read_file(None, "english")
-                    command = ['java', 'edu.stanford.nlp.pipeline.StanfordCoreNLP', '-annotators', 'ssplit',
-                               '-ssplit.newlineIsSentenceBreak', 'always', '-filelist', 'mapping_for_corenlp.txt', '-outputFormat',
-                               'json', '-outputDirectory', data]
-                subprocess.call(command)
-                os.remove("mapping_for_corenlp.txt")
+           
