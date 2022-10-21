@@ -33,7 +33,6 @@ from nltk.corpus import stopwords
 stopwords_english = set(stopwords.words('english'))
 stemmer = Stemmer('porter')
 
-df = pd.read_csv(r"data/hin_train.csv", encoding='utf-8')
 stem_words = set()
 with open('../hindi_stemwords.txt', 'r') as f:
     stem_words = {word.strip() for word in f}
@@ -128,17 +127,17 @@ def read_file(file_path,language,train=False):
         comment_words = ''
     
         for val in df["Summary"]:
-
-            # typecaste each val to string
             val = str(val)
-
-            # split the value
             tokens = val.split()
-
-            # Converts each token into lowercase
             for i in range(len(tokens)):
                 tokens[i] = tokens[i].lower()
-
+        df = pd.read_csv(r"data/eng_val.csv", encoding='utf-8')
+        for val in df["Summary"]:
+            val = str(val)
+            tokens = val.split()
+            for i in range(len(tokens)):
+                tokens[i] = tokens[i].lower()
+      
             comment_words += " ".join(tokens)+" "
         data=tokenise_english(comment_words)
 
@@ -150,25 +149,69 @@ def read_file(file_path,language,train=False):
             tokens = val.split()
             for i in range(len(tokens)):
                 tokens[i] = tokens[i].lower()
+        df = pd.read_csv(r"data/hin_val.csv", encoding='utf-8')
+        for val in df["Summary"]:
+            val = str(val)
+            tokens = val.split()
+            for i in range(len(tokens)):
+                tokens[i] = tokens[i].lower()
+      
             comment_words += " ".join(tokens)+" "
-        # data=tokenizer_hindi(comment_words)
+        data=tokenizer_hindi(comment_words)
     
     elif(language=="gujarati"):    
         df = pd.read_csv(r"data/guj_train.csv", encoding='utf-8')
         comment_words = ''
         for val in df["Summary"]:
-
-            # typecaste each val to string
             val = str(val)
-
-            # split the value
             tokens = val.split()
-
-            # Converts each token into lowercase
             for i in range(len(tokens)):
                 tokens[i] = tokens[i].lower()
-
             comment_words += " ".join(tokens)+" "
+        df = pd.read_csv(r"data/guj_val.csv", encoding='utf-8')
+        for val in df["Summary"]:
+            val = str(val)
+            tokens = val.split()
+            for i in range(len(tokens)):
+                tokens[i] = tokens[i].lower()
+      
         data=tokenizer_gujarati(comment_words)
+    return data
+# def convertToJson()
 
-def convertToJson()
+def finalRead(save_path,raw_path):
+
+    dir_save=os.path.abspath(save_path)
+    og_dir=os.path.abspath(raw_path)
+    if not dir_save:
+        os.mkdir(dir_save)
+    
+    languages=["eng","hin","guj"]
+    dataset_spl=["test","train","valid"]
+
+    for data_dp in dataset_spl:
+        for lang in languages:
+            assert os.path.isdir(os.path.join(og_dir,data_dp,lang))
+        for data_sp in dataset_spl:
+         for lan_sp in languages:
+            stories_dir = os.path.join(og_dir, data_sp, lan_sp)
+            tokenized_stories_dir = os.path.join(dir_save, data_sp, lan_sp)
+            stories = os.listdir(stories_dir)
+
+            # make IO list file
+            print("Making list of files to tokenize...")
+            with open("mapping_for_corenlp.txt", "w") as f:
+                for s in stories:
+                    if (not s.endswith('story') and not s.endswith('chnref')):
+                        continue
+                    f.write("%s\n" % (os.path.join(stories_dir, s)))
+
+            if lan_sp == 'eng':
+                data=read_file(None,"english")
+            else:
+                print("Preparing to tokenize chinese %s to %s..." % (stories_dir, tokenized_stories_dir))
+                command = ['java', 'edu.stanford.nlp.pipeline.StanfordCoreNLP', '-annotators', 'tokenize,ssplit',
+                           '-ssplit.newlineIsSentenceBreak', 'always', '-filelist', 'mapping_for_corenlp.txt',
+                           '-outputFormat',
+                           'json', '-outputDirectory', tokenized_stories_dir, '-props',
+                           'StanfordCoreNLP-chinese.properties', '-cp', '\"*\"', '-Xmx2g']
