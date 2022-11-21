@@ -20,7 +20,7 @@ Fine-tuned code for mT5. [Fine-tuned mT5](https://colab.research.google.com/driv
 ### Datasets used:
 [Gujarati](https://drive.google.com/file/d/1hiHwpTNMG-jcj3n-wDgzjJ2tOptcWfAL/view?usp=sharing)
 
-[Hindi and English](https://drive.google.com/file/d/1CCuVLkoJDgOCxxY851DpBhob_PAWsOo1/view?usp=sharing), ignore or replace gujarati folder in this.
+[Hindi and English](https://drive.google.com/file/d/1PMquHwtPC_lbeorJgXd7fJsCT8008QhC/view?usp=sharing), ignore or replace gujarati folder in this.
 
 3. IndicBART
 [Code](https://colab.research.google.com/drive/1UqkmIYp0VD9HGavWkh3cDy4sH15plEyj?usp=sharing)
