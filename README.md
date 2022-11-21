@@ -17,8 +17,9 @@ Predicting summary by mT5.
 [Paper](https://doi.org/10.48550/arXiv.2010.11934)
 
 Fine-tuned code for mT5. [Fine-tuned mT5](https://colab.research.google.com/drive/1zmuhDapQPA1g_Uswim4b1gxNFjBaQBde?usp=sharing)
-
-
+### Datasets used:
+[Gujarati](https://drive.google.com/file/d/1hiHwpTNMG-jcj3n-wDgzjJ2tOptcWfAL/view?usp=sharing)
+[Hindi and English](https://drive.google.com/file/d/1CCuVLkoJDgOCxxY851DpBhob_PAWsOo1/view?usp=sharing), ignore or replace gujarati folder in this.
 3. IndicBART
 [Code](https://colab.research.google.com/drive/1UqkmIYp0VD9HGavWkh3cDy4sH15plEyj?usp=sharing)
 
